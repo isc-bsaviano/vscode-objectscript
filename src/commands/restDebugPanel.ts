@@ -54,12 +54,10 @@ export class RESTDebugPanel {
       );
       return;
     }
-    if (
-      !(
-        openEditor.document.languageId.startsWith("objectscript") &&
-        !openEditor.document.languageId.endsWith("-injection")
-      )
-    ) {
+    if (!(
+      openEditor.document.languageId.startsWith("objectscript") &&
+      !openEditor.document.languageId.endsWith("-injection")
+    )) {
       // Open editor is not an InterSystems file
       vscode.window.showErrorMessage(
         "REST service debugging webview requires an InterSystems file in the active editor.",

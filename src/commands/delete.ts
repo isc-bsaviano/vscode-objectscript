@@ -11,7 +11,7 @@ export async function deleteExplorerItems(nodes: NodeBase[]): Promise<any> {
   const { wsFolder, namespace } = nodes[0];
   const docs = await Promise.allSettled(nodes.map((node) => node.getItemsForExport())).then((results) => {
     const items = new Set<string>();
-    results.forEach(result => {
+    results.forEach((result) => {
       if (result.status == "fulfilled") {
         for (const item of result.value) items.add(item);
       }
@@ -35,19 +35,22 @@ export async function deleteExplorerItems(nodes: NodeBase[]): Promise<any> {
   }
   const api = new AtelierAPI(wsFolder.uri);
   if (namespace) api.setNamespace(namespace);
-  await api.deleteDocs(docs).then((result) => {
-    for (const doc of result.result) {
-      if (doc.status == "" || doc.status.includes("#16005:")) {
-        outputChannel.appendLine(`Deleted ${doc.name}`);
-      } else {
-        outputChannel.appendLine(`Failed to delete ${doc.name}: ${doc.status}`);
+  await api
+    .deleteDocs(docs)
+    .then((result) => {
+      for (const doc of result.result) {
+        if (doc.status == "" || doc.status.includes("#16005:")) {
+          outputChannel.appendLine(`Deleted ${doc.name}`);
+        } else {
+          outputChannel.appendLine(`Failed to delete ${doc.name}: ${doc.status}`);
+        }
+        if (doc.ext && wsFolder.uri.scheme == FILESYSTEM_SCHEMA) {
+          // Only process source control output if we're in an isfs folder
+          const uri = DocumentContentProvider.getUri(doc.name, undefined, namespace, undefined, wsFolder.uri);
+          fireOtherStudioAction(OtherStudioAction.DeletedDocument, uri!, <UserAction>doc.ext);
+        }
       }
-      if (doc.ext && wsFolder.uri.scheme == FILESYSTEM_SCHEMA) {
-        // Only process source control output if we're in an isfs folder
-        const uri = DocumentContentProvider.getUri(doc.name,undefined,namespace,undefined,wsFolder.uri);
-        fireOtherStudioAction(OtherStudioAction.DeletedDocument, uri!, <UserAction>doc.ext);
-      }
-    }
-    explorerProvider.refresh();
-  }).catch((error) => handleError(error, `Failed to delete ${msg}.`));
+      explorerProvider.refresh();
+    })
+    .catch((error) => handleError(error, `Failed to delete ${msg}.`));
 }

@@ -177,7 +177,11 @@ export function getServerDocName(uri: vscode.Uri): string | undefined {
   const cspIdx = uri.path.lastIndexOf(cspAppsForUri(uri).find((cspApp) => uri.path.includes(cspApp + "/"))!);
   if (cspIdx != -1) {
     return uri.path.slice(cspIdx);
-  } else if (uri.path.toLowerCase().endsWith(".dfi")) {
+  }
+  const otherDocExts = otherDocExtsForUri(uri);
+  const ext = uri.path.split(".").pop()!.toLowerCase();
+  if (!otherDocExts.includes(ext)) return;
+  if (ext == "dfi") {
     // Determine the file path relative to the workspace folder path
     const wsPath = `${wsFolder.uri.path}${!wsFolder.uri.path.endsWith("/") ? "/" : ""}`;
     const relativeFilePath = uri.path.startsWith(wsPath) ? uri.path.slice(wsPath.length) : "";
@@ -236,7 +240,8 @@ export const routineNameTypeRegex = /^ROUTINE ([^\s]+)(?:\s*\[\s*Type\s*=\s*\b([
 
 export function currentFileFromContent(
   uri: vscode.Uri,
-  content: string | Buffer
+  content: string | Buffer,
+  name?: string
 ): CurrentTextFile | CurrentBinaryFile | null {
   const fileName = uri.fsPath;
   const workspaceFolder = workspaceFolderOfUri(uri);
@@ -245,29 +250,22 @@ export function currentFileFromContent(
     return null;
   }
   const fileExt = fileName.split(".").pop()!.toLowerCase();
-  if (
-    notIsfs(uri) &&
-    !isClassOrRtn(uri.path) &&
-    // This is a non-class or routine local file, so check if we can import it
-    !isImportableLocalFile(uri)
-  ) {
-    return null;
-  }
-  let name = "";
   let ext = "";
-  if (fileExt === "cls" && typeof content === "string") {
-    // Allow Unicode letters
-    const match = content.match(classNameRegex);
-    if (match) {
-      [, name, ext = "cls"] = match;
+  if (!name) {
+    if (fileExt === "cls" && typeof content === "string") {
+      // Allow Unicode letters
+      const match = content.match(classNameRegex);
+      if (match) {
+        [, name, ext = "cls"] = match;
+      }
+    } else if (fileExt.match(/(mac|int|inc)/i) && typeof content === "string") {
+      const match = content.match(routineNameTypeRegex);
+      if (match) {
+        [, name, ext = "mac"] = match;
+      }
+    } else {
+      name = notIsfs(uri) ? getServerDocName(uri) : isfsDocumentName(uri);
     }
-  } else if (fileExt.match(/(mac|int|inc)/i) && typeof content === "string") {
-    const match = content.match(routineNameTypeRegex);
-    if (match) {
-      [, name, ext = "mac"] = match;
-    }
-  } else {
-    name = notIsfs(uri) ? getServerDocName(uri)! : isfsDocumentName(uri);
   }
   if (!name) {
     return null;
@@ -308,14 +306,6 @@ export function currentFile(document?: vscode.TextDocument | null): CurrentTextF
   }
   const fileName = document.fileName;
   const fileExt = fileName.split(".").pop()!.toLowerCase();
-  if (
-    notIsfs(document.uri) &&
-    !isClassOrRtn(document.uri.path) &&
-    // This is a non-class or routine local file, so check if we can import it
-    !isImportableLocalFile(document.uri)
-  ) {
-    return null;
-  }
   const eol = document.eol || vscode.EndOfLine.LF;
   const uri = redirectDotvscodeRoot(document.uri);
   const content = document.getText();

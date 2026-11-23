@@ -69,8 +69,8 @@ export async function checkChangedOnServer(file: CurrentTextFile | CurrentBinary
             // Compare as string arrays
             const fileContent = file.content.split(/\r?\n/);
             sameContent = force
-            ? false
-            : (content).every((line, index) => line.trim() == (fileContent[index] || "").trim());
+              ? false
+              : content.every((line, index) => line.trim() == (fileContent[index] || "").trim());
           }
         } else {
           sameContent = force ? false : Buffer.compare(content as Buffer, file.content) === 0;
@@ -244,14 +244,13 @@ export async function loadChanges(
         workspaceState.update(`${file.uniqueId}:mtime`, mtime > 0 ? mtime : undefined);
         if (notIsfs(file.uri)) {
           let content: Document["content"];
-          if (
-            !(
-              isClass(file.uri.path) &&
-              !vscode.workspace.getConfiguration("objectscript", file.uri).get("refreshClassesOnSync") &&
-              !forceRefreshClasses
-            )
-          ) {
-            content = (await api.getDoc(file.name, file.uri, undefined, undefined, file.name.includes("/"))).result.content;
+          if (!(
+            isClass(file.uri.path) &&
+            !vscode.workspace.getConfiguration("objectscript", file.uri).get("refreshClassesOnSync") &&
+            !forceRefreshClasses
+          )) {
+            content = (await api.getDoc(file.name, file.uri, undefined, undefined, file.name.includes("/"))).result
+              .content;
           } else {
             // Insert/update the storage part of class definition.
             content = new TextDecoder().decode(await vscode.workspace.fs.readFile(file.uri)).split(/\r?\n/);
@@ -408,7 +407,7 @@ export async function importAndCompileCurrentFile(askFlags = false): Promise<any
   if (file.name.includes("/")) {
     // Need to send the raw bytes from disk to the server for web app files
     try {
-      file = currentFileFromContent(file.uri,Buffer.from(await vscode.workspace.fs.readFile(file.uri)));
+      file = currentFileFromContent(file.uri, Buffer.from(await vscode.workspace.fs.readFile(file.uri)));
       if (!file) return;
     } catch (error) {
       handleError(error, "Failed to read contents of current file from disk.");

@@ -26,13 +26,11 @@ export class ObjectScriptDefinitionProvider implements vscode.DefinitionProvider
       const range = new vscode.Range(position.line, selfRef.start.character + 2, position.line, selfRef.end.character);
       const classDefinition = new ClassDefinition(file!.name);
       return classDefinition.getMemberLocations(selfEntity).then((locations): vscode.DefinitionLink[] =>
-        locations.map(
-          (location): vscode.DefinitionLink => ({
-            originSelectionRange: range,
-            targetRange: location.range,
-            targetUri: location.uri,
-          })
-        )
+        locations.map((location): vscode.DefinitionLink => ({
+          originSelectionRange: range,
+          targetRange: location.range,
+          targetUri: location.uri,
+        }))
       );
     }
 

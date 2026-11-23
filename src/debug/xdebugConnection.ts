@@ -81,11 +81,13 @@ export class StatusResponse extends Response {
   /** Contains the line number if the status is 'break' */
   public line: number | undefined;
   /** Contains info about the exception if the reason for breaking was an exception */
-  public exception: {
-    name: string;
-    message: string;
-    code?: number;
-  } | undefined;;
+  public exception:
+    | {
+        name: string;
+        message: string;
+        code?: number;
+      }
+    | undefined;
   public constructor(document: XMLDocument, connection: Connection) {
     super(document, connection);
     const documentElement = document.documentElement;
@@ -368,8 +370,8 @@ export class BreakpointListResponse extends Response {
    */
   public constructor(document: XMLDocument, connection: Connection) {
     super(document, connection);
-    this.breakpoints = Array.from(document.documentElement.childNodes).map(
-      (breakpointNode): Breakpoint => Breakpoint.fromXml(breakpointNode as Element, connection)
+    this.breakpoints = Array.from(document.documentElement.childNodes).map((breakpointNode): Breakpoint =>
+      Breakpoint.fromXml(breakpointNode as Element, connection)
     );
   }
 }

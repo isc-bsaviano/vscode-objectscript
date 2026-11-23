@@ -49,7 +49,7 @@ option from the top menu, and click start. A new window will launch with the tit
 
 Work should be done on a unique branch -- not the master branch. Pull requests require the approval of two PMC members, as described in the [Governance document](GOVERNANCE.md). PMC review is often high level, so in addition to that, you should request a review by someone familiar with the technical details of your particular pull request.
 
-Please run the command `npm run lint-fix` before committing your changes. This will apply consistent styling and ensure that your pull request passes our code quality CI workflow.
+Please run the commands `npm run lint-fix` and `npm run format-fix` before committing your changes. `lint-fix` checks code quality rules, and `format-fix` applies consistent styling with Prettier. Together they ensure that your pull request passes our code quality CI workflow.
 
 We expect CI to be passing for a pull request before we will consider merging it. CI executed by pull requests will produce a `vsix` file, which can be downloaded and installed manually to test proposed functionality.
 

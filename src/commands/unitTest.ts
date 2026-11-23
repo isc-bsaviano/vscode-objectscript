@@ -726,9 +726,10 @@ async function runHandler(
                             if (locationUri) {
                               if (!documentSymbols.has(locationUri.toString())) {
                                 const newSymbols = await vscode.commands
-                                  .executeCommand<
-                                    vscode.DocumentSymbol[]
-                                  >("vscode.executeDocumentSymbolProvider", locationUri)
+                                  .executeCommand<vscode.DocumentSymbol[]>(
+                                    "vscode.executeDocumentSymbolProvider",
+                                    locationUri
+                                  )
                                   .then(
                                     (r) => r[0]?.children,
                                     () => undefined

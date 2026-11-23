@@ -15,6 +15,7 @@ import {
   displayableUri,
   isCompilable,
   uriIsAncestorOf,
+  getServerDocName,
 } from ".";
 import { AtelierAPI } from "../api";
 import { compile, importFile } from "../commands/compile";
@@ -57,15 +58,22 @@ async function getCurrentFile(
       const contentBytes = await vscode.workspace.fs.readFile(uri);
       content = Buffer.from(contentBytes);
     }
+    let name: string | undefined = undefined;
+    if (!isClassOrRtn(uri.path)) {
+      // Determine the server name to see if we need to decode the bytes
+      name = getServerDocName(uri);
+      if (!name) return; // Not an IRIS document
+    }
     return currentFileFromContent(
       uri,
-      isClassOrRtn(uri.path) && Buffer.isBuffer(content)
-        ? // We need the content as a string for classes and routines
+      Buffer.isBuffer(content) && !name?.includes("/")
+        ? // We need the content as a string for all but web app files
           textDecoder.decode(content)
         : // string[] must be turned into string
           Array.isArray(content)
           ? content.join("\n")
-          : content
+          : content,
+      name
     );
   } catch (error) {
     // Either a vscode.FileSystemError from readFile()
@@ -195,13 +203,15 @@ export async function indexWorkspaceFolder(wsFolder: vscode.WorkspaceFolder): Pr
   // fsRateLimiter. Compute the web app folders and document extensions for this
   // workspace folder's connection once since they're the same for every file checked here.
   const cached = { cspApps: cspAppsForUri(wsFolder.uri), otherDocExts: otherDocExtsForUri(wsFolder.uri) };
-  vscode.workspace.findFiles(new vscode.RelativePattern(wsFolder, "{**/*}")).then((files) =>
-    files
-      .filter((file) => isClassOrRtn(file.path) || isImportableLocalFile(file, cached))
-      .forEach((file) =>
-        fsRateLimiter.call<WSFolderIndexChange | undefined>(() => updateIndexInternal(file, documents, uris))
-      )
-  );
+  vscode.workspace
+    .findFiles(new vscode.RelativePattern(wsFolder, "{**/*}"))
+    .then((files) =>
+      files
+        .filter((file) => isClassOrRtn(file.path) || isImportableLocalFile(file, cached))
+        .forEach((file) =>
+          fsRateLimiter.call<WSFolderIndexChange | undefined>(() => updateIndexInternal(file, documents, uris))
+        )
+    );
   // Watch for all file changes
   const watcher = vscode.workspace.createFileSystemWatcher(new vscode.RelativePattern(wsFolder, "**/*"));
   const debouncedCompile = generateCompileFn();

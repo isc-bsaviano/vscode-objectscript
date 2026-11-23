@@ -62,8 +62,8 @@ jobs:
         with:
           node-version: 24
       - run: npm install
-      - name: lint
-        run: npm run lint
+      - run: npm run lint
+      - run: npm run format
       - run: npm run compile
       - name: Build package
         run: |

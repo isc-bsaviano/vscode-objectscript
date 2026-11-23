@@ -1735,6 +1735,8 @@
     "test": "node ./out/test/runTest.js",
     "lint": "eslint src/**",
     "lint-fix": "eslint --fix src/**",
+    "format": "prettier --check src/**/*.ts",
+    "format-fix": "prettier --write src/**/*.ts",
     "download-api": "dts dev 1.109.0",
     "postinstall": "npm run download-api"
   },
